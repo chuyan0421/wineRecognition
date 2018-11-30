@@ -120,6 +120,11 @@ class YOLO(object):
         image_data /= 255.
         image_data = np.expand_dims(image_data, 0)  # Add batch dimension.
 
+        prediction_path = self.prediction_path
+        if os.path.exists(prediction_path) == False:
+            os.mkdir(prediction_path)
+            print('make folder: ', prediction_path)
+
         out_boxes, out_scores, out_classes = self.sess.run(
             [self.boxes, self.scores, self.classes],
             feed_dict={
@@ -127,6 +132,8 @@ class YOLO(object):
                 self.input_image_shape: [image.size[1], image.size[0]],
                 K.learning_phase(): 0
             })
+
+
 
         for i, c in reversed(list(enumerate(out_classes))):
 
@@ -145,9 +152,9 @@ class YOLO(object):
             predicted_class = self.class_names[c]
 
             imageName = '{}_{}_{}_{}_{}.jpg'.format(predicted_class, left, top, right, bottom)
-            print(self.prediction_path)
-            prediction_image = os.path.join(self.prediction_path, imageName)
-            print(prediction_image)
+
+            prediction_image = os.path.join(prediction_path, imageName)
+            print('Saving: ', prediction_image)
             cropped.save(prediction_image)
             print(predicted_class)
             print(out_scores[i])
@@ -155,7 +162,7 @@ class YOLO(object):
         end = timer()
         print('time used: %f' % (end - start))
 
-        return cropped
+        return
 
 
 

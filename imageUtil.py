@@ -64,6 +64,8 @@ if __name__ == '__main__':
 
     imagesPath = FLAGS.images_path
     boxesPath = FLAGS.boxes_path
+    print(imagesPath)
+    print(boxesPath)
 
     imageList = os.listdir(imagesPath)
     for image in imageList:

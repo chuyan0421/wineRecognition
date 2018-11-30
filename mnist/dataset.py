@@ -25,6 +25,7 @@ import tempfile
 import numpy as np
 from six.moves import urllib
 import tensorflow as tf
+from PIL import Image
 
 
 def read32(bytestream):
@@ -115,3 +116,63 @@ def train(directory):
 def test(directory):
   """tf.data.Dataset object for MNIST test data."""
   return dataset(directory, 't10k-images-idx3-ubyte', 't10k-labels-idx1-ubyte')
+
+def image_dataset(directory):
+
+    # 函数的功能时将filename对应的图片文件读进来，并缩放到统一的大小
+    def _parse_function(filename, label):
+        image_string = tf.read_file(filename)
+        image_decoded = tf.image.decode_jpeg(image_string)
+        image_resized = tf.image.resize_images(image_decoded, [28, 28])
+        return image_resized, label
+
+    file_temp = []
+    label_temp = []
+
+    pos_directory = os.path.join(directory, 'positive')
+    pos_fileList = os.listdir(pos_directory)
+    for file in pos_fileList:
+        file_temp.append(os.path.join(pos_directory, file))
+        label_temp.append(1)
+
+    neg_directory = os.path.join(directory, 'negative')
+    neg_fileList = os.listdir(neg_directory)
+    for file in neg_fileList:
+        file_temp.append(os.path.join(neg_directory, file))
+        label_temp.append(0)
+
+
+    # 图片文件的列表
+    filenames = tf.constant(file_temp)
+    # label[i]就是图片filenames[i]的label
+    labels = tf.constant(label_temp)
+
+    # 此时dataset中的一个元素是(filename, label)
+    dataset = tf.data.Dataset.from_tensor_slices((filenames, labels))
+
+    # 此时dataset中的一个元素是(image_resized, label)
+    dataset = dataset.map(_parse_function)
+
+    return dataset
+
+def image_train(directory):
+    print('train directory: ', directory)
+    return image_dataset(directory)
+
+
+def image_eval(directory):
+    print('eval directory: ', directory)
+    return image_dataset(directory)
+
+def letterbox_image(image, size):
+    '''resize image with unchanged aspect ratio using padding'''
+    iw, ih = image.size
+    w, h = size
+    scale = min(w/iw, h/ih)
+    nw = int(iw*scale)
+    nh = int(ih*scale)
+
+    image = image.resize((nw,nh), Image.BICUBIC)
+    new_image = Image.new('RGB', size, (128,128,128))
+    new_image.paste(image, ((w-nw)//2, (h-nh)//2))
+    return new_image

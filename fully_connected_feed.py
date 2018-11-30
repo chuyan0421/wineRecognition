@@ -29,6 +29,7 @@ import tensorflow as tf
 
 from mnist import input_data
 from mnist import mnist
+from mnist import dataset
 
 
 # Basic model parameters as external flags.
@@ -36,53 +37,51 @@ FLAGS = None
 
 
 def placeholder_inputs(batch_size):
-  """Generate placeholder variables to represent the input tensors.
+    """Generate placeholder variables to represent the input tensors.
 
-  These placeholders are used as inputs by the rest of the model building
-  code and will be fed from the downloaded data in the .run() loop, below.
+    These placeholders are used as inputs by the rest of the model building
+    code and will be fed from the downloaded data in the .run() loop, below.
 
-  Args:
-    batch_size: The batch size will be baked into both placeholders.
+    Args:
+        batch_size: The batch size will be baked into both placeholders.
 
-  Returns:
-    images_placeholder: Images placeholder.
-    labels_placeholder: Labels placeholder.
-  """
-  # Note that the shapes of the placeholders match the shapes of the full
-  # image and label tensors, except the first dimension is now batch_size
-  # rather than the full size of the train or test data sets.
-  images_placeholder = tf.placeholder(tf.float32, shape=(batch_size,
-                                                         mnist.IMAGE_PIXELS))
-  labels_placeholder = tf.placeholder(tf.int32, shape=(batch_size))
-  return images_placeholder, labels_placeholder
+    Returns:
+        images_placeholder: Images placeholder.
+        labels_placeholder: Labels placeholder.
+    """
+    # Note that the shapes of the placeholders match the shapes of the full
+    # image and label tensors, except the first dimension is now batch_size
+    # rather than the full size of the train or test data sets.
+    images_placeholder = tf.placeholder(tf.float32, shape=(batch_size, mnist.IMAGE_PIXELS))
+    labels_placeholder = tf.placeholder(tf.int32, shape=(batch_size))
+    return images_placeholder, labels_placeholder
 
 
 def fill_feed_dict(data_set, images_pl, labels_pl):
-  """Fills the feed_dict for training the given step.
+    """Fills the feed_dict for training the given step.
 
-  A feed_dict takes the form of:
-  feed_dict = {
-      <placeholder>: <tensor of values to be passed for placeholder>,
-      ....
-  }
+    A feed_dict takes the form of:
+    feed_dict = {
+        <placeholder>: <tensor of values to be passed for placeholder>,
+        ....
+    }
 
-  Args:
-    data_set: The set of images and labels, from input_data.read_data_sets()
-    images_pl: The images placeholder, from placeholder_inputs().
-    labels_pl: The labels placeholder, from placeholder_inputs().
+    Args:
+        data_set: The set of images and labels, from input_data.read_data_sets()
+        images_pl: The images placeholder, from placeholder_inputs().
+        labels_pl: The labels placeholder, from placeholder_inputs().
 
-  Returns:
-    feed_dict: The feed dictionary mapping from placeholders to values.
-  """
-  # Create the feed_dict for the placeholders filled with the next
-  # `batch size` examples.
-  images_feed, labels_feed = data_set.next_batch(FLAGS.batch_size,
-                                                 FLAGS.fake_data)
-  feed_dict = {
-      images_pl: images_feed,
-      labels_pl: labels_feed,
-  }
-  return feed_dict
+    Returns:
+        feed_dict: The feed dictionary mapping from placeholders to values.
+    """
+    # Create the feed_dict for the placeholders filled with the next
+    # `batch size` examples.
+    images_feed, labels_feed = data_set.next_batch(FLAGS.batch_size, FLAGS.fake_data)
+    feed_dict = {
+        images_pl: images_feed,
+        labels_pl: labels_feed,
+    }
+    return feed_dict
 
 
 def do_eval(sess,
@@ -119,6 +118,7 @@ def run_training():
   # Get the sets of images and labels for training, validation, and
   # test on MNIST.
   data_sets = input_data.read_data_sets(FLAGS.input_data_dir, FLAGS.fake_data)
+
 
   # Tell TensorFlow that the model will be built into the default Graph.
   with tf.Graph().as_default():
@@ -217,64 +217,80 @@ def run_training():
 
 
 def main(_):
-  if tf.gfile.Exists(FLAGS.log_dir):
-    tf.gfile.DeleteRecursively(FLAGS.log_dir)
-  tf.gfile.MakeDirs(FLAGS.log_dir)
-  run_training()
+    if tf.gfile.Exists(FLAGS.log_dir):
+        tf.gfile.DeleteRecursively(FLAGS.log_dir)
+    tf.gfile.MakeDirs(FLAGS.log_dir)
+    run_training()
+    # ds = dataset.train('E://tmp//mnist_data')
+    # ds = ds.take(10)
+    # iterator = ds.make_one_shot_iterator()
+    # one_element = iterator.get_next()
+    # with tf.Session() as sess:
+    #     try:
+    #         while True:
+    #             print(sess.run(one_element))
+    #     except tf.errors.OutOfRangeError:
+    #         print('end!')
+
+
+    # data_sets = input_data.read_data_sets(FLAGS.input_data_dir, FLAGS.fake_data)
+    # print(data_sets.train)
+    # images_feed, labels_feed = data_sets.train.next_batch(1, FLAGS.fake_data)
+    # print(images_feed)
 
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser()
-  parser.add_argument(
-      '--learning_rate',
-      type=float,
-      default=0.01,
-      help='Initial learning rate.'
-  )
-  parser.add_argument(
-      '--max_steps',
-      type=int,
-      default=2000,
-      help='Number of steps to run trainer.'
-  )
-  parser.add_argument(
-      '--hidden1',
-      type=int,
-      default=128,
-      help='Number of units in hidden layer 1.'
-  )
-  parser.add_argument(
-      '--hidden2',
-      type=int,
-      default=32,
-      help='Number of units in hidden layer 2.'
-  )
-  parser.add_argument(
-      '--batch_size',
-      type=int,
-      default=100,
-      help='Batch size.  Must divide evenly into the dataset sizes.'
-  )
-  parser.add_argument(
-      '--input_data_dir',
-      type=str,
-      default=os.path.join(os.getenv('TEST_TMPDIR', '/tmp'),
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--learning_rate',
+        type=float,
+        default=0.01,
+        help='Initial learning rate.'
+    )
+    parser.add_argument(
+        '--max_steps',
+        type=int,
+        default=2000,
+        help='Number of steps to run trainer.'
+    )
+    parser.add_argument(
+        '--hidden1',
+        type=int,
+        default=128,
+        help='Number of units in hidden layer 1.'
+    )
+    parser.add_argument(
+        '--hidden2',
+        type=int,
+        default=32,
+        help='Number of units in hidden layer 2.'
+    )
+    parser.add_argument(
+        '--batch_size',
+        type=int,
+        default=100,
+        help='Batch size.  Must divide evenly into the dataset sizes.'
+    )
+    parser.add_argument(
+        '--input_data_dir',
+        type=str,
+        default=os.path.join(os.getenv('TEST_TMPDIR', '/tmp'),
                            'tensorflow/mnist/input_data'),
-      help='Directory to put the input data.'
-  )
-  parser.add_argument(
-      '--log_dir',
-      type=str,
-      default=os.path.join(os.getenv('TEST_TMPDIR', '/tmp'),
+        help='Directory to put the input data.'
+    )
+    parser.add_argument(
+        '--log_dir',
+        type=str,
+        default=os.path.join(os.getenv('TEST_TMPDIR', '/tmp'),
                            'tensorflow/mnist/logs/fully_connected_feed'),
-      help='Directory to put the log data.'
-  )
-  parser.add_argument(
-      '--fake_data',
-      default=False,
-      help='If true, uses fake data for unit testing.',
-      action='store_true'
-  )
+        help='Directory to put the log data.'
+    )
+    parser.add_argument(
+        '--fake_data',
+        default=False,
+        help='If true, uses fake data for unit testing.',
+        action='store_true'
+    )
 
-  FLAGS, unparsed = parser.parse_known_args()
-  tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
+    FLAGS, unparsed = parser.parse_known_args()
+    tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)

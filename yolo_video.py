@@ -7,7 +7,7 @@ from PIL import Image
 def detect_img(yolo, img_path):
     # while True:
     # img = input('Input image filename:')
-    print(img_path)
+    print('Openning: ', img_path)
     try:
         image = Image.open(img_path)
     except:
@@ -15,7 +15,7 @@ def detect_img(yolo, img_path):
         # continue
     else:
         r_image = yolo.detecting_image(image)
-        r_image.show()
+        # r_image.show()
     yolo.close_session()
 
 FLAGS = None
