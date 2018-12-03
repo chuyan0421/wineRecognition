@@ -123,7 +123,11 @@ def image_dataset(directory):
     def _parse_function(filename, label):
         image_string = tf.read_file(filename)
         image_decoded = tf.image.decode_jpeg(image_string)
+
+
+
         image_resized = tf.image.resize_images(image_decoded, [28, 28])
+
         return image_resized, label
 
     file_temp = []
@@ -173,6 +177,6 @@ def letterbox_image(image, size):
     nh = int(ih*scale)
 
     image = image.resize((nw,nh), Image.BICUBIC)
-    new_image = Image.new('RGB', size, (128,128,128))
+    new_image = Image.new('L', size, 128)
     new_image.paste(image, ((w-nw)//2, (h-nh)//2))
     return new_image
