@@ -1,17 +1,16 @@
-from keras.applications import ResNet50
-from keras.preprocessing.image import img_to_array
-from keras.applications import imagenet_utils
 from PIL import Image
 import numpy as np
 import flask
 import io
 import tensorflow as tf
+
 import os
 import argparse
 from yolo3.model import yolo_eval, yolo_body, tiny_yolo_body
 from keras.layers import Input
 from yolo3.utils import letterbox_image
 from keras import backend as K
+
 
 # initialize our Flask application and the Keras model
 app = flask.Flask(__name__)
@@ -57,6 +56,7 @@ def build_model():
     sess = K.get_session()
 
     global model
+
     global input_image_shape
     global boxes
     global scores
@@ -72,42 +72,6 @@ def build_model():
                                        num_classes, input_image_shape,
                                        score_threshold=yolo_score, iou_threshold=yolo_iou)
 
-#
-# def load_model():
-#     # load the pre-trained Keras model (here we are using a model
-#     # pre-trained on ImageNet and provided by Keras, but you can
-#     # substitute in your own networks just as easily)
-#     global model
-#     model = ResNet50(weights="imagenet")
-#     global graph
-#     graph = tf.get_default_graph()
-
-
-# def prepare_image(image, target):
-#     # if the image mode is not RGB, convert it
-#     if image.mode != "RGB":
-#         image = image.convert("RGB")
-#
-#     # resize the input image and preprocess it
-#     image = image.resize(target)
-#     image = img_to_array(image)
-#     image = np.expand_dims(image, axis=0)
-#     image = imagenet_utils.preprocess_input(image)
-#
-#     # return the processed image
-#     return image
-
-# def image_precess(image):
-#     boxed_image = letterbox_image(image, tuple(reversed((416, 416))))
-
-#     image_data = np.array(boxed_image, dtype='float32')
-#     image_data /= 255.
-#     image_data = np.expand_dims(image_data, 0)  # Add batch dimension.
-    # image_data = image_data.astype(np.float32)
-    # image_data = imagenet_utils.preprocess_input(image_data)
-
-    # return image_data
-
 
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -122,23 +86,15 @@ def predict():
             # read the image in PIL format
             image_raw = flask.request.files["image"].read()
             image = Image.open(io.BytesIO(image_raw))
-            # image = Image.open('5.jpg')
-            # image.save('/root/yanzi/wineRecognition/test_flask.jpeg', 'JPEG')
 
-            # preprocess the image and prepare it for classification
-            # image_after = image_precess(image)
 
             boxed_image = letterbox_image(image, tuple(reversed((416, 416))))
 
             image_data = np.array(boxed_image, dtype='float32')
             image_data /= 255.
             image_data = np.expand_dims(image_data, 0)  # Add batch dimension.
-            print(image.size[0])
-            print(image.size[1])
-            print(image_data.shape)
 
             with graph.as_default():
-                # sess = K.get_session()
                 out_boxes, out_scores, out_classes = sess.run(
                     [boxes, scores, classes],
                     feed_dict={
@@ -148,6 +104,7 @@ def predict():
                     })
 
                 print('Found {} boxes for {}'.format(len(out_boxes), 'img'))
+
 
                 for i, c in reversed(list(enumerate(out_classes))):
                     predicted_class = yolo_classes[c]
@@ -164,6 +121,7 @@ def predict():
                     print(label, (left, top), (right, bottom))
                     
 
+
                 data["success"] = True
 
     # return the data dictionary as a JSON response
@@ -173,8 +131,7 @@ def predict():
 # if this is the main thread of execution first load the model and
 # then start the server
 if __name__ == '__main__':
-    print(("* Loading Keras model and Flask starting server..."
-        "please wait until server has fully started"))
+
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
@@ -192,16 +149,7 @@ if __name__ == '__main__':
         help='path to coco classed file'
     )
 
-    # parser.add_argument(
-    #     '--yolo_saved_model', type=str, default='/tmp/yolo_saved_model',
-    #     help='path to coco classed file'
-    # )
-
     FLAGS, unparsed = parser.parse_known_args()
-
-    # export_path = FLAGS.yolo_saved_model
-    # if not os.path.exists(export_path):
-    #     os.mkdir(export_path)
 
     build_model()
     app.run()
