@@ -104,21 +104,26 @@ class YOLO(object):
 
     def detecting_image(self, image):
         start = timer()
-        # print(image)
-        # print(image.size)
+        print(image.size[0])
+        print(image.size[1])
+        print(image)
 
         if self.model_image_size != (None, None):
             assert self.model_image_size[0]%32 == 0, 'Multiples of 32 required'
             assert self.model_image_size[1]%32 == 0, 'Multiples of 32 required'
             boxed_image = letterbox_image(image, tuple(reversed(self.model_image_size)))
+            print(self.model_image_size)
+            print('mark 1')
         else:
             new_image_size = (image.width - (image.width % 32),
                               image.height - (image.height % 32))
             boxed_image = letterbox_image(image, new_image_size)
+            print('mark 2')
 
         image_data = np.array(boxed_image, dtype='float32')
         image_data /= 255.
         image_data = np.expand_dims(image_data, 0)  # Add batch dimension.
+        print(image_data.shape)
 
         prediction_path = self.prediction_path
         if os.path.exists(prediction_path) == False:
@@ -133,6 +138,7 @@ class YOLO(object):
                 K.learning_phase(): 0
             })
 
+        print('Found {} boxes for {}'.format(len(out_boxes), 'img'))
 
 
         for i, c in reversed(list(enumerate(out_classes))):
