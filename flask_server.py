@@ -104,24 +104,23 @@ def predict():
                     })
 
                 print('Found {} boxes for {}'.format(len(out_boxes), 'img'))
-
+                data['item'] = []
 
                 for i, c in reversed(list(enumerate(out_classes))):
                     predicted_class = yolo_classes[c]
                     box = out_boxes[i]
                     score = out_scores[i]
 
-                    label = '{} {:.2f}'.format(predicted_class, score)
+                    # label = '{} {:.2f}'.format(predicted_class, score)
 
                     top, left, bottom, right = box
                     top = max(0, np.floor(top + 0.5).astype('int32'))
                     left = max(0, np.floor(left + 0.5).astype('int32'))
                     bottom = min(image.size[1], np.floor(bottom + 0.5).astype('int32'))
                     right = min(image.size[0], np.floor(right + 0.5).astype('int32'))
-                    print(label, (left, top), (right, bottom))
-                    
-
-
+                    data['item'].append('{},{},{},{},{},{}'.format(predicted_class, score, left, top, right, bottom))
+                    # print(label, (left, top), (right, bottom))
+                
                 data["success"] = True
 
     # return the data dictionary as a JSON response
