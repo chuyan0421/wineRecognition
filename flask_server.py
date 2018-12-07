@@ -120,7 +120,9 @@ def predict():
                     right = min(image.size[0], np.floor(right + 0.5).astype('int32'))
                     data['item'].append('{},{},{},{},{},{}'.format(predicted_class, score, left, top, right, bottom))
                     # print(label, (left, top), (right, bottom))
-                
+
+                print(data['item'])
+
                 data["success"] = True
 
     # return the data dictionary as a JSON response
