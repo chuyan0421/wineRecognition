@@ -28,38 +28,73 @@ def get_anchors():
 
 def build_model():
 
-    anchors = get_anchors()
+    global yolo_score
+    yolo_score = 0.3
+
+    global yolo_iou
+    yolo_iou = 0.45
+
+    global graph
+    graph = tf.get_default_graph()
+
+    yolo_anchors = get_anchors()
     class_names = get_class()
 
-    num_anchors = len(anchors)
+    num_anchors = len(yolo_anchors)
     num_classes = len(class_names)
 
-    model = yolo_body(Input(shape=(None, None, 3)), num_anchors // 3, num_classes)
+    global model
+    global input_image_shape
+    global boxes
+    global scores
+    global classes
+
+    model = yolo_body(Input(shape=(416, 416, 3)), num_anchors // 3, num_classes)
     model.load_weights(FLAGS.model_path)
     print('{} model, anchors, and classes loaded.'.format(FLAGS.model_path))
-    return model
+
+    input_image_shape = K.placeholder(shape=(None, 2))
+
+    boxes, scores, classes = yolo_eval(model.output, yolo_anchors,
+                                       num_classes, input_image_shape,
+                                       score_threshold=yolo_score, iou_threshold=yolo_iou)
 
 
-def save_model_to_serving(model, export_version, export_path):
-    print(model.input, model.output)
-    signature = tf.saved_model.signature_def_utils.predict_signature_def(
-        inputs={'input': model.input}, outputs={'outputs': tf.convert_to_tensor(model.output)}
-    )
-    exported_path = os.path.join(
-        tf.compat.as_bytes(export_path),
-        tf.compat.as_bytes(str(export_version))
-    )
-    builder = tf.saved_model.builder.SavedModelBuilder(exported_path)
-    legacy_init_op = tf.group(tf.tables_initializer(), name='legacy_init_op')
-    builder.add_meta_graph_and_variables(
-        sess= K.get_session(),
-        tags=[tf.saved_model.tag_constants.SERVING],
-        signature_def_map={
-            'classify': signature,
-        },
-        legacy_init_op=legacy_init_op
-    )
-    builder.save()
+def save_model_to_serving(export_version, export_path):
+
+    with graph.as_default():
+        # print(model.input, model.output)
+        print(model.input.shape)
+        print(input_image_shape.shape)
+        signature = tf.saved_model.signature_def_utils.predict_signature_def(
+            inputs={
+                'image': model.input,
+                'size': input_image_shape
+            },
+            outputs={
+                'boxes': boxes,
+                'scores': scores,
+                'classes': classes
+            }
+        )
+        exported_path = os.path.join(
+            tf.compat.as_bytes(export_path),
+            tf.compat.as_bytes(str(export_version))
+        )
+        builder = tf.saved_model.builder.SavedModelBuilder(exported_path)
+        # legacy_init_op = tf.group(tf.tables_initializer(), name='legacy_init_op')
+        builder.add_meta_graph_and_variables(
+            sess=K.get_session(),
+            tags=[tf.saved_model.tag_constants.SERVING],
+            signature_def_map={
+                'classify': signature,
+            },
+            main_op=tf.tables_initializer(),
+            strip_default_attrs=True
+            # legacy_init_op=legacy_init_op
+        )
+        builder.save()
+
 
 
 if __name__ == '__main__':
@@ -82,17 +117,17 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '--yolo_saved_model', type=str, default='/tmp/yolo_saved_model',
-        help='path to coco classed file'
+        help='path to saved model'
     )
 
 
     FLAGS, unparsed = parser.parse_known_args()
-    yolo_model = build_model()
-
     export_path = FLAGS.yolo_saved_model
     if not os.path.exists(export_path):
         os.mkdir(export_path)
-    save_model_to_serving(yolo_model, '1', export_path)
+
+    build_model()
+    save_model_to_serving('1', export_path)
 
 
 

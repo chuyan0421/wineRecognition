@@ -55,7 +55,7 @@ def build_model():
     global scores
     global classes
 
-    model = yolo_body(Input(shape=(None, None, 3)), num_anchors//3, num_classes)
+    model = yolo_body(Input(shape=(416, 416, 3)), num_anchors//3, num_classes)
     model.load_weights(FLAGS.model_path)
     print('{} model, anchors, and classes loaded.'.format(FLAGS.model_path))
 
@@ -91,10 +91,9 @@ def predict():
     print(image_data.shape)
 
     with graph.as_default():
-        # init_a = tf.global_variables_initializer()
+
         sess = K.get_session()
-        # sess.run(tf.global_variables_initializer())
-        # K.set_session(sess)
+
         out_boxes, out_scores, out_classes = sess.run(
             [boxes, scores, classes],
             feed_dict={
@@ -117,7 +116,7 @@ def predict():
             left = max(0, np.floor(left + 0.5).astype('int32'))
             bottom = min(image.size[1], np.floor(bottom + 0.5).astype('int32'))
             right = min(image.size[0], np.floor(right + 0.5).astype('int32'))
-            # print(label, (left, top), (right, bottom))
+
 
         sess.close()
 

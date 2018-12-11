@@ -46,9 +46,19 @@ if __name__ == '__main__':
     request = predict_pb2.PredictRequest()
     request.model_spec.name = 'yolo'
     request.model_spec.signature_name = 'classify'
-    request.inputs['input'].CopyFrom(
+    request.inputs['image'].CopyFrom(
         tf.contrib.util.make_tensor_proto(data)
     )
+
+    image_size = np.array([image.size[1], image.size[0]])
+    image_size = np.expand_dims(image_size, 0)
+    image_size = image_size.astype(np.float32)
+
+    request.inputs['size'].CopyFrom(
+        tf.contrib.util.make_tensor_proto(image_size)
+    )
+
+
     result_future = stub.Predict(request, 5.0) # 10 secs timeout
     print(result_future)
     # result_future.add_done_callback(_create_rpc_callback())
