@@ -7,10 +7,11 @@ from yolo3.utils import letterbox_image
 from PIL import Image
 import numpy as np
 import grpc
+import time
 
 hostport = '192.168.33.55:8500'
 
-img_path = '5.jpg'
+img_path = '10.jpg'
 
 
 def image_precess(image):
@@ -37,6 +38,7 @@ def _create_rpc_callback():
 
 if __name__ == '__main__':
 
+    t0 = time.time()
     channel = grpc.insecure_channel(hostport)
     stub = prediction_service_pb2_grpc.PredictionServiceStub(channel)
 
@@ -59,7 +61,9 @@ if __name__ == '__main__':
     )
 
 
-    result_future = stub.Predict(request, 5.0) # 10 secs timeout
+    result_future = stub.Predict(request, 10.0) # 10 secs timeout
     print(result_future)
+    t1 = time.time()
+    print('{} seconds used'.format(t1-t0))
     # result_future.add_done_callback(_create_rpc_callback())
 
